@@ -44,6 +44,9 @@ SCREENS = {
                   interlace=False, state='s19', palsup=6, aa=True, black=True),
     'rank3': dict(map=('RANK_DAT.BIN', 0x594, 64, 64), tiles=('RANK_DAT.BIN:1B160', 0x60000), base=0x3000,
                   interlace=False, state='s19', palsup=6, aa=True),
+    # 조작 설정 머리(操作設定) NBG1 — TIT_PNT 맵 @0x37200(64칸 폭) + GF @0x275D8 → VRAM 0x54000 (스테이트 ctl = 사용자 state1)
+    'ctl1': dict(map=('TITLE/TIT_PNT.BIN', 0x37200, 64, 12), tiles=('TITLE/TIT_PNT.BIN:275D8', 0x54000), base=0x2000,
+                 interlace=False, state='ctl', palsup=6, aa=True),
     # 제목 메뉴 NBG3(発進·演習·設定 등) — TIT_PNT 맵 조각(64칸 폭) @0x37600~ + GF @0x286E8 → VRAM 0x60000 (PNCN 0xC0CC)
     'tit3': dict(map=('TITLE/TIT_PNT.BIN', 0x37600, 64, 248), tiles=('TITLE/TIT_PNT.BIN:286E8', 0x60000), base=0x3000,
                  interlace=True, state='m1', palsup=6, aa=True, black=True, fill_w=True, post='post_tit_ctrl', zones=[(352, 1056, 480, 1104), (352, 1104, 480, 1152), (352, 1152, 480, 1200), (352, 1200, 480, 1248)]
@@ -650,7 +653,7 @@ def build(name):
             if c.get('aa'):
                 cov = aa_cov(ln, dh, vs); K.WEIGHT = None
                 if c.get('black'):                       # 원본 획 굵기 맞춤(가로 1px)
-                    cov = np.minimum(1, cov + np.pad(cov, ((0, 0), (1, 0)))[:, :-1])
+                    cov = np.pad(cov, ((0, 0), (0, 1))); cov = np.minimum(1, cov + np.pad(cov, ((0, 0), (1, 0)))[:, :-1])   # 오른쪽 1칸 늘린 뒤 굵게(끝 획 안 잘림)
                 if cov.shape[1] > avail:
                     cov = aa_fit(cov, avail) if cov.shape[1] * K.MIN_SQ <= avail else aa_fit(cov, avail, int(cov.shape[0] * avail / (cov.shape[1] * K.MIN_SQ)))
                 m = (cov >= 0.5).astype(np.uint8)
@@ -664,12 +667,17 @@ def build(name):
             x = it['x1'] - m.shape[1] if al == 'R' else it['x0'] + ind
             yy = y + (max(0, it['h'] - m.shape[0]) // 2 if n == 1 else 0)
             if big:                                    # 큰 제목: 가로 1px 굵게 + 오른쪽 아래 그림자(테두리색) + 채움
-                m = np.maximum(m, np.pad(m, ((0, 0), (1, 0)))[:, :-1])
+                m = np.pad(m, ((0, 0), (0, 1))); m = np.maximum(m, np.pad(m, ((0, 0), (1, 0)))[:, :-1])
                 if cov is not None:
-                    cov = np.maximum(cov, np.pad(cov, ((0, 0), (1, 0)))[:, :-1])
+                    cov = np.pad(cov, ((0, 0), (0, 1))); cov = np.maximum(cov, np.pad(cov, ((0, 0), (1, 0)))[:, :-1])
                 src_ = img[it['y0']:it['y1'], it['x0']:it['x1']]           # 그림자 색 = 원본 채움 화소의 오른쪽 아래(+2,+2) 자리 색 최빈값
                 sh_ = src_[2 * vs:, 2:][(src_[:-2 * vs, :-2] == it['fill']) & (src_[2 * vs:, 2:] != it['fill']) & (src_[2 * vs:, 2:] > 0)]
                 shc = collections.Counter(sh_.tolist()).most_common(1)[0][0] if len(sh_) else it['edge']
+                cand_ = [int(z) for z in np.unique(src_) if z and z != it['fill']]
+                def _bl(z):
+                    e_ = crb[((c['palsup'] * 16 + it['pal']) * 16 + z) & 0x7FF]; return ((e_ >> 10) & 31) - (e_ & 31)
+                if cand_ and _bl(max(cand_, key=_bl)) > 8:          # 원본에 파란 그림자가 있으면 그 색
+                    shc = max(cand_, key=_bl)
                 if cov is not None and c.get('fill_w'):    # 원래 잉크 가로 범위와 똑같이
                     cov = aa_fit(cov, it['x1'] - it['x0'] - 8); m = (cov >= 0.5).astype(np.uint8); x = it['x0'] + 2   # 굵게 1px·그림자 2px 까지 원래 범위 안
                     yy = it['y0'] + max(0, (it['h'] - cov.shape[0]) // 2)

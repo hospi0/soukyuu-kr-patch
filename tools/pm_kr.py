@@ -23,7 +23,8 @@ import pm_detail as P  # noqa: E402
 import pm_layout as LY  # noqa: E402
 from bdf import Font  # noqa: E402
 
-G9 = Font(r'C:\claude\utils\font\Galmuri-v2.40.3\Galmuri9.bdf')
+G9_PATH = r'C:\claude\utils\font\Galmuri-v2.40.3\Galmuri9.bdf'
+G9 = Font(G9_PATH)
 NOTO = r'C:\Windows\Fonts\NotoSerifKR-VF.ttf'
 FILL, EDGE = 15, 3
 USE_EDGE = int(os.environ.get('PM_EDGE', '0'))   # 테두리 — 넣으면 타일 수가 원본을 넘음(뒤 VRAM 0x70800~ 은 메뉴 머리 글자)
@@ -52,6 +53,22 @@ def text_layer(text):
     a = np.zeros((h, max(w, max(x for x, y in pts) + 1)), bool)
     for x, y in pts:
         a[y, x] = True
+    return np.repeat(a, 2, axis=0)
+
+
+G7 = Font(os.path.join(os.path.dirname(G9_PATH), 'Galmuri7.bdf'))
+
+
+def text7(text):
+    """Galmuri7 한 줄(세로 2배) — 머리 줄이 단 폭을 넘을 때"""
+    pts, x = [], 0
+    for ch in text:
+        pp, w = G7.draw(ch)
+        pts += [(px + x, py) for px, py in pp]; x += w
+    h = max(y for _, y in pts) + 1
+    a = np.zeros((h, max(x, max(px for px, _ in pts) + 1)), bool)
+    for px, py in pts:
+        a[py, px] = True
     return np.repeat(a, 2, axis=0)
 
 
@@ -156,9 +173,8 @@ def render_page(f, k, tr):
             m = text_layer(t); cx0, cx1 = cols[0]
             right = x0 > (cx0 + cx1) // 2 - 20 and x1 > cx1 - 12     # 오른쪽 맞춤이던 줄
             x = (x1 - m.shape[1]) if right else x0
-            if m.shape[1] > cx1 - cx0 - 4:                 # 단 폭 넘으면 가로로 눌러 넣음(자르지 않음)
-                w_ = cx1 - cx0 - 4
-                m = m[:, (np.arange(w_) * m.shape[1] // w_)]
+            if m.shape[1] > cx1 - cx0 - 4:                 # 단 폭 넘으면 띄어쓰기 줄이고, 그래도 넘치면 Galmuri7(열 건너뛰기 누르기 금지 — 획이 빠짐)
+                m = text7(t)                               # 마지막 수단(번역을 먼저 줄일 것)
                 x = (x1 - m.shape[1]) if right else x0
             palv = collections.Counter(p['pal'][a // 8:(b + 7) // 8, x0 // 8:(x1 + 7) // 8].ravel()).most_common(1)[0][0]
             put(new, pal, m, x, a + (b - a - m.shape[0]) // 2, palv)

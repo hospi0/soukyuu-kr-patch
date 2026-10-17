@@ -188,6 +188,18 @@ def main():
             x = ln['x'] if ln['al'] == 'L' else (ln['x'] - im.width if ln['al'] == 'R' else ln['x'] - im.width // 2)
             pim.alpha_composite(im, (max(0, x), ln['base'] - asc))
         new = np.array(pim.convert('RGB'))
+        # 원본 흰 테두리 되돌림: 그림 끝 3px 안의 밝은 화소(지우기·글자에 덮이지 않게 맨 마지막에)
+        br_ = a.min(2) > 150                               # 테두리 = 원본에서 거의 통째로 밝은 세로줄·가로줄(맵이 512 폭이라 위치로 못 잡음)
+        fr_ = np.zeros(white.shape, bool)
+        cf = br_.mean(0); rf = br_.mean(1)
+        xs_ = np.nonzero(br_.sum(0) >= 96)[0]; ys_ = np.nonzero(br_.sum(1) >= 96)[0]
+        for x in xs_:
+            if len(xs_) and (x <= xs_.min() + 2 or x >= xs_.max() - 2):   # 바깥 테두리만(안쪽 밝은 줄 = 옛 글자 자리 제외)
+                fr_[:, x] |= br_[:, x]
+        for y in ys_:
+            if len(ys_) and (y <= ys_.min() + 2 or y >= ys_.max() - 2):
+                fr_[y, :] |= br_[y, :]
+        new[fr_] = rgb[fr_]
         nw = to555(new); nw[w16 == 0] = 0
         # 칸 제자리 쓰기
         tb = bytearray(t); seen = {}
