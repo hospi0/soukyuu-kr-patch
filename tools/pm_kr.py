@@ -156,8 +156,10 @@ def render_page(f, k, tr):
             m = text_layer(t); cx0, cx1 = cols[0]
             right = x0 > (cx0 + cx1) // 2 - 20 and x1 > cx1 - 12     # 오른쪽 맞춤이던 줄
             x = (x1 - m.shape[1]) if right else x0
-            if m.shape[1] > cx1 - cx0:
-                m = m[:, :cx1 - cx0]
+            if m.shape[1] > cx1 - cx0 - 4:                 # 단 폭 넘으면 가로로 눌러 넣음(자르지 않음)
+                w_ = cx1 - cx0 - 4
+                m = m[:, (np.arange(w_) * m.shape[1] // w_)]
+                x = (x1 - m.shape[1]) if right else x0
             palv = collections.Counter(p['pal'][a // 8:(b + 7) // 8, x0 // 8:(x1 + 7) // 8].ravel()).most_common(1)[0][0]
             put(new, pal, m, x, a + (b - a - m.shape[0]) // 2, palv)
     # 본문 줄 자리: 왼쪽 단 남은 줄 + 오른쪽 단 줄
@@ -180,8 +182,9 @@ def render_page(f, k, tr):
         top = allslots[idx[0]][1][0]
         need = len(idx) + over
         pitch = (H - 18 - top) / max(1, need - 1)
-        if pitch < 17:                                 # 줄이 겹칠 만큼 좁으면 실패(간격 좁혀 다시)
-            return p, new, pal, dict(본문줄=len(blines), 자리=len(allslots), 넘침=over)
+        if pitch < 19:                                 # 줄 간격이 너무 좁으면 실패 → 번역 줄일 것
+            need19 = int((H - 18 - top) // 19) + 1
+            return p, new, pal, dict(본문줄=len(blines), 자리=len(allslots), 넘침=need - need19)
         allslots = allslots[:idx[0]] + [(c_last, (top + q * pitch, top + q * pitch + 18)) for q in range(need)]
         over = len(blines) - len(allslots)
     bodypal = collections.Counter(p["pal"][[int(s[1][0]) // 8 for s in allslots[:3]], 1:20].ravel()).most_common(1)[0][0] if allslots else 14
@@ -217,7 +220,7 @@ def main():
     global TRACK
     for ln in open(os.path.join(ROOT, 'work', 'pm', 'valid.tsv'), encoding='utf-8').read().splitlines()[1:]:
         f, k, _ = ln.split('\t'); k = int(k)
-        for TRACK in (0, -1, -2):                       # 간격 0 우선, 안 들어가면 1px 씩 좁힘
+        for TRACK in (0,):                              # 간격 0 고정(사용자: 간격 좁히지 말고 번역을 줄일 것)
             p, new, pal, rep = render_page(f, k, kr[(f, k)])
             ents, nb, comp = rebuild(p, new, pal)
             nt_old = len(p['tiles']) // 32; nt_new = len(nb) // 32
