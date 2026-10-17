@@ -1,0 +1,13 @@
+# 허용 목록: 소스·문서·번역 표만(ROM·스테이트·빌드 결과·my files·dist 금지)
+*
+!.gitignore
+!README.md
+!tools/
+!tools/*.py
+!docs/
+!docs/*.md
+!work/
+!work/text/
+!work/text/*.tsv
+!work/stg/
+!work/stg/fit.json
