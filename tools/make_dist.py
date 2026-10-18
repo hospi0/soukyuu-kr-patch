@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
-VER = 'v0.9'
+VER = 'v0.91'
 XDELTA = r'C:\claude\utils\xdelta.exe'
 ROMNAME = 'Soukyuu Gurentai (Japan) (Rev A)'
 SRC = os.path.join(r'C:\claude\roms\ss', ROMNAME)

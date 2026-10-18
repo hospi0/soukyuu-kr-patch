@@ -47,11 +47,33 @@ SCREENS = {
     # 조작 설정 머리(操作設定) NBG1 — TIT_PNT 맵 @0x37200(64칸 폭) + GF @0x275D8 → VRAM 0x54000 (스테이트 ctl = 사용자 state1)
     'ctl1': dict(map=('TITLE/TIT_PNT.BIN', 0x37200, 64, 12), tiles=('TITLE/TIT_PNT.BIN:275D8', 0x54000), base=0x2000,
                  interlace=False, state='ctl', palsup=6, aa=True),
+    # 특별 시청(特別試聴) NBG1 — TOK_PNT 맵 64행 @0x2CE00 + GF @0x1A664 → VRAM 0x4D000 (머리·RAIZING SOUND HISTORY·안내 5줄). 스테이트 snd1
+    'snd1': dict(map=('TITLE/TOK_PNT.BIN', 0x2CE00, 64, 64), tiles=('TITLE/TOK_PNT.BIN:1A664', 0x4D000), base=0x2000,
+                 interlace=True, state='snd1', palsup=6, aa=False, seggap=0, post='post_snd_head', alt_from={3: 2, 4: 2, 5: 2, 6: 2}),
+    # 조작 설정+ 머리(操作設定+) NBG1 — TIT_PNT 맵 @0x39200(64칸 폭) + GF @0x27E60 → VRAM 0x55000 (ctl1 과 다른 덩어리, 2026-10-18 스테이트 tokm)
+    'ctl1p': dict(map=('TITLE/TIT_PNT.BIN', 0x39200, 64, 12), tiles=('TITLE/TIT_PNT.BIN:27E60', 0x55000), base=0x2000,
+                  interlace=False, state='tokm', palsup=6, aa=True, post='post_ctlp_head'),
     # 제목 메뉴 NBG3(発進·演習·設定 등) — TIT_PNT 맵 조각(64칸 폭) @0x37600~ + GF @0x286E8 → VRAM 0x60000 (PNCN 0xC0CC)
     'tit3': dict(map=('TITLE/TIT_PNT.BIN', 0x37600, 64, 248), tiles=('TITLE/TIT_PNT.BIN:286E8', 0x60000), base=0x3000,
                  interlace=True, state='m1', palsup=6, aa=True, black=True, fill_w=True, post='post_tit_ctrl', zones=[(352, 1056, 480, 1104), (352, 1104, 480, 1152), (352, 1152, 480, 1200), (352, 1200, 480, 1248)]
                  + [(0, 1024 + 32 * k, 89, 1056 + 32 * k) for k in range(14)] + [(89, 1024 + 32 * k, 192, 1056 + 32 * k) for k in range(8)]
                  + [(248, 962, 326, 992), (326, 962, 406, 992), (406, 962, 512, 992)]),
+    # 특별 설정(特別設定) NBG1 — TOK_PNT 맵 80행 @0x33600(64칸 폭) + GF @0x209C4 → VRAM 0x51000 (PNCN 0xC0C8, 칸 기준 0x2000) · 인터레이스(TVMD 0x80C1)
+    #   머리 特別設定 + 메뉴 7줄(操作設定+へ·周回数·残機数·ボンバー数·クレジット数·エクステンド設定·特別試聴) + 단위 機·個. 값(ON/OFF·숫자)은 코드. 스테이트 crash1 = 사용자 2026-10-18 15:40
+    'tok1': dict(map=('TITLE/TOK_PNT.BIN', 0x33600, 64, 80), tiles=('TITLE/TOK_PNT.BIN:209C4', 0x51000), base=0x2000,
+                 interlace=True, state='crash1', palsup=6, aa=False, post='post_tok_head',
+                 zones=[(8, 20, 120, 76)] + [(60, 86 + 40 * k, 210, 126 + 40 * k) for k in range(7)] + [(228, 166, 268, 206), (228, 206, 268, 246)]),
+    # 엔딩 문장 NBG3 — ENDING_S/T.BIN(같은 내용) 맵 @0x1010C(64칸 폭) + GF @0x12A08 → VRAM 0x60000 (PNCN 0xC0CC). 스테이트 end_state2(2026-10-18)
+    'end3': dict(map=('ENDING/ENDING_S.BIN', 0x1010C, 64, 81), tiles=('ENDING/ENDING_S.BIN:12A08', 0x60000), base=0x3000,
+                 interlace=False, state='end_state2', palsup=6, aa=False, seggap=0, edge=0, black=True, line_clip=True,   # 2026-10-18 테두리 없앰·원본 굵기·줄별 원래 폭(사용자)
+                 zones=[(0, 0, 344, 80), (0, 315, 344, 425), (0, 505, 344, 555)]),
+    # 조종사별 엔딩 NBG3 — ENDING_1/2/3.BIN 맵 84행(64칸 폭) + 바로 뒤 GF → VRAM 0x60000 (2026-10-18 스테이트 end_state5 = 1번)
+    'pe1': dict(map=('ENDING/ENDING_1.BIN', 0x1F550, 64, 84), tiles=('ENDING/ENDING_1.BIN:21F50', 0x60000), base=0x3000,
+                interlace=False, state='end_state5', palsup=6, aa=False, seggap=0, edge=0, black=True, line_clip=True, zones=[(0, 85, 344, 140), (0, 277, 344, 380), (0, 533, 344, 588)]),
+    'pe2': dict(map=('ENDING/ENDING_2.BIN', 0x24AB0, 64, 84), tiles=('ENDING/ENDING_2.BIN:274B0', 0x60000), base=0x3000,
+                interlace=False, state='end_state5', palsup=6, aa=False, seggap=0, edge=0, black=True, line_clip=True, zones=[(0, 85, 344, 140), (0, 285, 344, 364), (0, 533, 344, 588)]),
+    'pe3': dict(map=('ENDING/ENDING_3.BIN', 0x24E80, 64, 84), tiles=('ENDING/ENDING_3.BIN:27880', 0x60000), base=0x3000,
+                interlace=False, state='end_state5', palsup=6, aa=False, seggap=0, edge=0, black=True, line_clip=True, zones=[(0, 85, 344, 140), (0, 293, 344, 372), (0, 501, 344, 604)]),
     # 설정·최고 득점 NBG1 — OPT_PNT 맵 4장 @0x4AD00(최고 득점)·0x4CD00·0x4ED00(설정)·0x50D00, PNCN 0xC0C8(칸 기준 0x2000, 보조 팔레트 6)
     #   그림 A = GF @0x4822C → VRAM 0x4D000 · 그림 B = GF @0x40178 → VRAM 0x56000
     'opt1a': dict(map=('TITLE/OPT_PNT.BIN', 0x4AD00, 64, 256), tiles=('TITLE/OPT_PNT.BIN:4822C', 0x4D000), base=0x2000,
@@ -255,6 +277,165 @@ def post_tit_ctrl(c, img, new, npal, crb):
         if cov.shape[1] > X1 - X0 - 16:
             cov = aa_fit(cov, X1 - X0 - 16)
         aa_put(new, npal, cov, y + 4 + (24 - cov.shape[0]) // 2, X0 + (X1 - X0 - cov.shape[1]) // 2, light, pv, c, crb, snap=False, edge=dark, vs=2)
+    # 오른쪽 열 16번째 조작 항목 «デモ中のスキップ»(x352~512 · y994~1026) — 사선 줄무늬(주기 32, x+y 일정) 바탕을 아래 «？？？» 상자와 함께 다수결로 복원 (2026-10-18)
+    DX0, DX1, DY = 352, 512, 994
+    bx = [img[DY:DY + 32, DX0:DX1], img[DY + 32:DY + 64, DX0:DX1]]
+    TXT = {3, 7, 8, 9, 10, 15}
+    cl2 = np.zeros((32, DX1 - DX0), img.dtype)
+    for yy in range(32):
+        for ph in range(32):
+            vv_ = [int(b_[yy, xx]) for b_ in bx for xx in range(DX1 - DX0) if (xx + yy) % 32 == ph and int(b_[yy, xx]) not in TXT]
+            vbest = collections.Counter(vv_).most_common(1)[0][0] if vv_ else 1
+            for xx in range(DX1 - DX0):
+                if (xx + yy) % 32 == ph:
+                    cl2[yy, xx] = vbest
+    cl2[:, 0] = bx[0][:, 0]; cl2[:, -1] = bx[0][:, -1]                # 상자 양끝 열은 원본(바깥 테두리)
+    new[DY:DY + 32, DX0:DX1] = cl2
+    K.WEIGHT = b'Black'
+    cov = aa_cov('데모 중 스킵', 11, 2); K.WEIGHT = None
+    if cov.shape[1] > DX1 - DX0 - 16:
+        cov = aa_fit(cov, DX1 - DX0 - 16)
+    pv2 = int(npal[(DY + 8) // 8, (DX0 + 40) // 8])
+    aa_put(new, npal, cov, DY + 4 + (24 - cov.shape[0]) // 2, DX0 + (DX1 - DX0 - cov.shape[1]) // 2, light, pv2, c, crb, snap=False, edge=dark, vs=2)
+    # 주회 수 값 «1주 엔딩·2주 엔딩·2주 시작»: 게임이 각각 10칸(31~40·41~50·51~60열, 120~123행)을 떼어 같은 자리에 씀
+    #   → 셋을 같은 크기로 각자 10칸 안 왼쪽 맞춤(fill_w 로 원래 폭에 늘리면 크기가 제각각·넘침, 2026-10-18 실기)
+    VY0, VY1 = 960, 992
+    for k_, (vt, vc0) in enumerate((('1주 엔딩', 31), ('2주 엔딩', 41), ('2주 시작', 51))):
+        vx0, vx1 = vc0 * 8, vc0 * 8 + 80
+        reg = img[VY0:VY1, vx0:vx1]
+        vfill = collections.Counter(reg[reg > 0].tolist()).most_common(1)[0][0] if (reg > 0).any() else 15
+        new[VY0:VY1, vx0:vx1] = 0
+        K.WEIGHT = b'Black'
+        cv = aa_cov(vt, 12, 2); K.WEIGHT = None
+        if cv.shape[1] > 74:
+            cv = aa_fit(cv, 74)
+        pv3 = int(npal[(VY0 + 8) // 8, vx0 // 8 + 2])
+        aa_put(new, npal, cv, VY0 + 5 + (26 - cv.shape[0]) // 2, vx0 + 2, vfill, pv3, c, crb, snap=False, vs=2)
+
+
+def render_segs(ln, dh):
+    """색 조각 사이 틈 없이 잇되, 조각 끝/앞 띄어쓰기는 글자 폭만큼 틈으로(엔딩 문장 — 2026-10-18)"""
+    segs = K.line_mask(ln)
+    ms = []
+    for t, h, alt in segs:
+        lead = len(t) - len(t.lstrip(' ')); trail = len(t) - len(t.rstrip(' '))
+        m, bl = K.glyph_mask(t.strip(' '), h or dh)
+        lay = 2 if alt == '~' else (100 + int(alt[1:]) if alt else 1)
+        ms.append((m, bl, lay, lead, trail, h or dh))
+    asc = max(b for m, b, *_ in ms); desc = max(m.shape[0] - b for m, b, *_ in ms)
+    sp = lambda n, hh: int(round(n * hh * 0.3))
+    W = sum(m.shape[1] + sp(ld + tr, hh) for m, b, c_, ld, tr, hh in ms)
+    out = np.zeros((asc + desc, W), np.uint8); x = 0
+    for m, b, c_, ld, tr, hh in ms:
+        x += sp(ld, hh)
+        sub = out[asc - b:asc - b + m.shape[0], x:x + m.shape[1]]; sub[m] = c_; x += m.shape[1] + sp(tr, hh)
+    return out
+
+
+SND_LINES = [('좌우', '로 곡 선택'), ('상하', '로 게임 전환'), ('A', '로 곡 듣기'), ('B', '로 곡 멈춤'), ('스타트', '로 복귀')]
+
+
+def post_snd_head(c, img, new, npal, crb):
+    """특별 시청 머리: 원래 잉크 칸 사각형(x16~144·y24~88 — 셀 경계) 안에 «특별 시청»
+    안내 5줄: 작은 명조는 획이 빠져 깨짐(2026-10-18 실기) → Galmuri11 Bold 를 찍고 행마다 두 번(인터레이스), 원래 줄 자리(x18·y299+…)
+    색: 주황 채움 5·테두리 3 / 흰 채움 15·테두리 7 (원본 그대로), 테두리 = 오른쪽·아래 1px"""
+    head_in_box(new, '특별 시청', 16, 24, 143, 88)
+    from bdf import Font
+    F = Font(os.path.join('C:' + os.sep, 'claude', 'utils', 'font', 'Galmuri-v2.40.3', 'Galmuri11-Bold.bdf'))
+    new[296:420, 16:208] = 0
+    for k, (hi, rest) in enumerate(SND_LINES):
+        y0 = [299, 323, 348, 371, 395][k]; x = 18
+        for txt, fill, edge in ((hi, 5, 3), (rest, 15, 7)):
+            for ch in txt:
+                pts, w = F.draw(ch)
+                if ch != ' ':
+                    m = np.zeros((11, w + 2), bool)
+                    for px, py in pts:
+                        if 3 <= py < 14:
+                            m[py - 3, px] = True
+                    m2 = np.repeat(m, 2, axis=0)[:21]            # 세로 2배(원래 줄 높이 21)
+                    e = (np.roll(m2, 1, 1) | np.roll(m2, 1, 0)) & ~m2
+                    sub = new[y0:y0 + m2.shape[0], x:x + m2.shape[1]]
+                    sub[e[:, :sub.shape[1]]] = edge; sub[m2[:, :sub.shape[1]]] = fill
+                x += w
+
+
+def post_ctlp_head(c, img, new, npal, crb):
+    """조작 설정+ 머리(TIT_PNT 맵 0x39200 3~8행·2~15열 = x16~128·y24~72): 원래 사각형 안에 «조작 설정+»(post_tok_head 와 같은 색 번호 규칙)"""
+    head_in_box(new, '조작 설정+', 16, 24, 127, 72)
+
+
+def head_in_box(new, text, X0, Y0, X1, Y1):
+    from PIL import Image as _I, ImageDraw as _D, ImageFont as _F
+    new[Y0:Y1, X0:X1] = 0
+    f = _F.truetype(K.FONT, 120); f.set_variation_by_name(b'Black')
+    im = _I.new('L', (1200, 220)); _D.Draw(im).text((10, 10), text, font=f, fill=255)
+    a_ = np.array(im); ys, xs = np.nonzero(a_ > 110)
+    w, h = X1 - X0 - 6, Y1 - Y0 - 8
+    M = np.array(_I.fromarray(a_[ys.min():ys.max() + 1, xs.min():xs.max() + 1]).resize((w, h), _I.LANCZOS)) > 100
+    reg = np.zeros((Y1 - Y0, X1 - X0), np.uint8)
+    Mf = np.zeros_like(reg, bool); Mf[3:3 + h, 1:1 + w] = M
+    sh = np.zeros_like(Mf)
+    for dx, dy in ((1, 1), (2, 2), (2, 1), (1, 2)):
+        sh[dy:, dx:] |= Mf[:-dy, :-dx]
+    out_ = np.zeros_like(Mf)
+    for dx, dy in ((3, 3), (3, 2), (2, 3)):
+        out_[dy:, dx:] |= Mf[:-dy, :-dx]
+    reg[out_ & ~sh & ~Mf] = 6; reg[sh & ~Mf] = 2
+    edge = Mf & ~(np.roll(Mf, -1, 1) & np.roll(Mf, -1, 0))
+    reg[Mf] = 1; reg[edge] = 3
+    new[Y0:Y1, X0:X1] = reg
+
+
+def post_tok_head(c, img, new, npal, crb):
+    """특별 설정 머리(TOK_PNT 맵 3~8행·2~13열 = x16~112·y24~72): 게임이 이 사각형만 복사 → 그 안에 «특별 설정»을 늘려 맞춤.
+    원본 색 번호: 1 주황 채움 · 3 오른쪽·아래 음영 · 2 파란 그림자(오른쪽 아래 2px) · 6 그림자 바깥 (2026-10-18 하스피 «잘림»)"""
+    from PIL import Image as _I, ImageDraw as _D, ImageFont as _F
+    X0, Y0, X1, Y1 = 16, 24, 112, 72
+    new[Y0:Y1, X0:X1] = 0
+    f = _F.truetype(K.FONT, 120); f.set_variation_by_name(b'Black')
+    im = _I.new('L', (900, 220)); _D.Draw(im).text((10, 10), '특별 설정', font=f, fill=255)
+    a_ = np.array(im); ys, xs = np.nonzero(a_ > 110)
+    w, h = X1 - X0 - 6, Y1 - Y0 - 8                       # 그림자 3px·위아래 여유
+    M = np.array(_I.fromarray(a_[ys.min():ys.max() + 1, xs.min():xs.max() + 1]).resize((w, h), _I.LANCZOS)) > 100
+    ox, oy = X0 + 1, Y0 + 3
+    reg = np.zeros((Y1 - Y0, X1 - X0), np.uint8)
+    Mf = np.zeros_like(reg, bool); Mf[oy - Y0:oy - Y0 + h, ox - X0:ox - X0 + w] = M
+    sh = np.zeros_like(Mf)
+    for dx, dy in ((1, 1), (2, 2), (2, 1), (1, 2)):
+        sh[dy:, dx:] |= Mf[:-dy, :-dx]
+    out_ = np.zeros_like(Mf)
+    for dx, dy in ((3, 3), (3, 2), (2, 3)):
+        out_[dy:, dx:] |= Mf[:-dy, :-dx]
+    reg[out_ & ~sh & ~Mf] = 6
+    reg[sh & ~Mf] = 2
+    edge = Mf & ~(np.roll(Mf, -1, 1) & np.roll(Mf, -1, 0))
+    reg[Mf] = 1; reg[edge] = 3
+    new[Y0:Y1, X0:X1] = reg
+    # 원본 글자의 4px 이하 조각(항목 분해에서 빠져 안 지워짐)은 평소엔 어두워 안 보이다가 강조 팔레트에서 밝게 드러남 → 구역 안 작은 원본 조각 지움(2026-10-18 실기)
+    for zx0, zy0, zx1, zy1 in c['zones']:
+        reg = img[zy0:zy1, zx0:zx1] > 0
+        lab, nl = I.label(reg)
+        for k_ in range(1, nl + 1):
+            ys_, xs_ = np.nonzero(lab == k_)
+            if ys_.max() - ys_.min() < 5 and xs_.max() - xs_.min() < 5:
+                sel = (new[zy0 + ys_, zx0 + xs_] == img[zy0 + ys_, zx0 + xs_])
+                new[zy0 + ys_[sel], zx0 + xs_[sel]] = 0
+    # 메뉴 줄·단위: 강조 표시가 «원래 글자 칸 행»만 복사 → 새 잉크를 원래 칸 행 안으로 끌어올림(2026-10-18 실기 «조작 설정+로·특별 시청 잘림»)
+    for zx0, zy0, zx1, zy1 in c['zones'][1:]:
+        o = img[zy0:zy1, zx0:zx1] > 0; n_ = new[zy0:zy1, zx0:zx1].copy()
+        if not o.any() or not (n_ > 0).any():
+            continue
+        oy = np.nonzero(o.any(1))[0]; ny = np.nonzero((n_ > 0).any(1))[0]
+        top = ((zy0 + oy[0]) // 8) * 8 - zy0; bot = ((zy0 + oy[-1]) // 8 + 1) * 8 - zy0   # 원래 칸 행 범위(구역 좌표)
+        h = ny[-1] - ny[0] + 1
+        if h > bot - top:
+            raise SystemExit('tok1 구역 %s: 글자 높이 %d > 칸 %d' % ((zx0, zy0), h, bot - top))
+        dy = top + (bot - top - h) // 2 - ny[0]
+        if dy:
+            sh = np.zeros_like(n_); src = n_[ny[0]:ny[-1] + 1]
+            sh[ny[0] + dy:ny[0] + dy + h] = src
+            new[zy0:zy1, zx0:zx1] = sh
 
 
 def post_jdemo_sec(c, img, new, npal, crb):
@@ -336,6 +517,11 @@ def build(name):
     miss = [j for j in range(len(its)) if j not in sp]
     if miss:
         raise SystemExit('지정 없음 %s' % miss)
+    for j_, k_ in c.get('alt_from', {}).items():          # 둘째 색(강조 낱말) 판정이 안 된 항목은 다른 항목의 둘째 색을 빌림
+        its[j_]['alt'] = its[k_]['alt']
+    if c.get('edge') is not None:                         # 테두리 색 하나로(항목마다 자동 판정이 달라 줄마다 굵기가 달라 보임)
+        for it in its:
+            it['edge'] = c['edge']
     K.ITEM_FILL.clear(); K.ITEM_FILL.update({j: it['fill'] for j, it in enumerate(its)})
     new = img.copy(); npal = pal.copy()
     for j, it in enumerate(its):                          # 지우기
@@ -512,13 +698,21 @@ def build(name):
         left, _, right_ = v[2:].partition('|')
         if v.startswith('#P'):
             bg = 0 if (src == 0).mean() > 0.3 else vals.most_common(1)[0][0]   # 바탕이 투명(0)이면 0
-            keep_top = left.strip() == '='                 # 왼쪽 위 번호 줄(S.O.Q-…)은 원본 화소 그대로
+            keep_top = left.strip() in ('=', '=<')         # 왼쪽 위 번호 줄(S.O.Q-…)은 원본 화소 그대로 · '=<' = 원본 큰 이름 첫 글자가 흰색(紫電)
             box[(box > 0)] = bg                            # 판 전체를 바탕색으로
             if keep_top:
                 # 번호 줄 = 위쪽 절반 중 큰 이름(가장 채도 높은 색) 왼쪽
                 cols_big = np.nonzero((src == colorful).any(0))[0]
-                bx = cols_big.min() - 2 if len(cols_big) else (x1_ - x0_) // 2
                 hh_ = (y1_ - y0_) // 2
+                if len(cols_big) and left.strip() == '=<':  # 주황이 둘째 글자(紫電)면 흰 첫 글자까지 — 큰 이름 = 위·아래 절반 모두 잉크인 열(번호 줄은 위만, 읽기 가나는 아래만)(2026-10-18 «시» 위 紫 잔상)
+                    tall = np.nonzero((src[:hh_] > 0).any(0) & (src[hh_:] > 0).any(0))[0]
+                    tall = tall[tall >= cols_big.min() - 40]
+                    bx = min(cols_big.min(), tall.min() if len(tall) else cols_big.min()) - 2
+                    topink = (src[:hh_] > 0).any(0)
+                    while bx < cols_big.min() - 2 and topink[max(bx - 1, 0)]:   # 번호 줄 글자 가운데서 자르지 않게 — 위 절반 빈 열까지 오른쪽으로
+                        bx += 1
+                else:
+                    bx = cols_big.min() - 2 if len(cols_big) else (x1_ - x0_) // 2
                 box[:hh_, :bx] = src[:hh_, :bx]
             H_ = y1_ - y0_
             # 큰 이름: 오른쪽, 높이 ≈ 판의 85%, 첫 글자 주황(가장 채도 높은 색)·나머지 흰색
@@ -534,7 +728,7 @@ def build(name):
                 limit = x1_ - 6 - W_
             else:
                 limit = x1_ - 4
-            ls = [] if left.strip() == '=' else [t for t in left.split('\n') if t]
+            ls = [] if left.strip() in ('=', '=<') else [t for t in left.split('\n') if t]
             for q, t in enumerate(ls):
                 K.WEIGHT = b'Bold'
                 m = K.render_line(K.line_mask(t), int(H_ * 0.32)); K.WEIGHT = None
@@ -586,7 +780,9 @@ def build(name):
             if ln.startswith('>'):
                 al = 'R'; ln = ln[1:]
             dh = (it['h'] if n == 1 else max(8, it['h'] // n - 1)) // vs
-            if ln.startswith('!'):                         # '!' = 원래 글자 칸 끝(8px 올림)까지만 — 코드가 칸 범위로 복사하는 줄(설정 메뉴 강조)
+            if n > 1 and not ''.join(ln.split('}')[-1:]).strip() and ln.count('{') == ln.count('}'):   # 빈 줄(색 코드만) = 줄 자리만 비움(엔딩 «사라졌다.» 줄 올림)
+                y += dh * vs + (it['h'] - dh * vs * n) // (n - 1); continue
+            if ln.startswith('!'):                        # '!' = 원래 글자 칸 끝(8px 올림)까지만 — 코드가 칸 범위로 복사하는 줄(설정 메뉴 강조)
                 right = min(right, (it['x1'] + 7) // 8 * 8); ln = ln[1:]
             fixed_ = None
             if ln.startswith('@'):                         # '@x,x,…' = ⇥ 조각 시작 x(절대) 직접 지정 — 코드가 칸 범위로 떼어 쓰는 값(ステレオ/モノラル)
@@ -649,6 +845,24 @@ def build(name):
             big = it['h'] >= 36 and n == 1
             K.WEIGHT = b'Black' if (big or c.get('black')) else None
             avail = right - it['x0'] - ind
+            if c.get('line_clip'):                         # 게임이 줄마다 원래 잉크 가로 범위만 옮김(엔딩 문장) — 그 줄 원래 잉크 오른쪽 끝(8px 올림)까지
+                rows_ = (img[:, it['x0']:332] > 0).any(1)   # (x 336~ 눈금 막대 제외) 원래 줄(잉크 행 묶음) 중 이 줄과 겹치는 것들의 가장 짧은 오른쪽 끝
+                ends_ = []; r_ = max(0, y - 30)
+                while r_ < min(len(rows_), y + dh * vs + 30):
+                    if rows_[r_]:
+                        r1_ = r_
+                        while r1_ < len(rows_) and rows_[r1_]:
+                            r1_ += 1
+                        if r_ < y + dh * vs and r1_ > y and r1_ - r_ >= 6:
+                            cs_ = np.nonzero((img[r_:r1_, it['x0']:332] > 0).any(0))[0]
+                            ends_.append(cs_.max() + 1)
+                        r_ = r1_
+                    else:
+                        r_ += 1
+                if ends_:
+                    avail = min(avail, (it['x0'] + min(ends_) + 7) // 8 * 8 - it['x0'] - ind)
+                    if K.SNAP:                             # place 의 8px 격자 맞춤이 오른쪽으로 미는 만큼
+                        avail -= max(0, (it['x0'] + ind + 4) // 8 * 8 - (it['x0'] + ind))
             cov = None
             if c.get('aa'):
                 cov = aa_cov(ln, dh, vs); K.WEIGHT = None
@@ -658,7 +872,7 @@ def build(name):
                     cov = aa_fit(cov, avail) if cov.shape[1] * K.MIN_SQ <= avail else aa_fit(cov, avail, int(cov.shape[0] * avail / (cov.shape[1] * K.MIN_SQ)))
                 m = (cov >= 0.5).astype(np.uint8)
             else:
-                m = K.render_line(K.line_mask(ln), dh)
+                m = render_segs(ln, dh) if c.get("seggap") == 0 else K.render_line(K.line_mask(ln), dh)
                 K.WEIGHT = None
                 if vs == 2:
                     m = np.repeat(m, 2, axis=0)
@@ -748,8 +962,10 @@ def build(name):
     tdn = bytearray(base_of(fp)); tdn[off:off + len(comp)] = comp; outs[fp] = tdn   # 쓸 때는 다른 화면이 고친 부분 위에 합침
     mdn = bytearray(base_of(mp)) if mp != fp else outs[fp]
     # 맵은 «이 화면이 바꾼 칸만» 합침 — 같은 맵을 쓰는 다른 그림 세트 화면(opt1b·opt1c 등)의 변경을 지우지 않게
+    # ★이 화면 그림 세트를 가리키는 칸(mine)은 «안 바뀌었어도» 항상 씀 — 안 쓰면 이전 빌드에서 바꿨다가 이번에 원래로 돌아간 칸이
+    #   예전 번호로 남아 새 타일과 어긋남(2026-10-18 실기 «1주/2주 엔딩·2주 시작 깨짐»)
     for k_, (r, x) in enumerate(c['_order']):
-        if newents[r * w + x] != ents[r * w + x]:
+        if newents[r * w + x] != ents[r * w + x] or mine[r, x]:
             struct.pack_into('>H', mdn, moff + k_ * 2, newents[r * w + x])
     outs[mp] = mdn
     for k2, data in outs.items():

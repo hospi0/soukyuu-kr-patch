@@ -26,7 +26,16 @@ EDGE = int(os.environ.get('EDGE', '1'))       # 테두리 1px
 X_SCALE = float(os.environ.get('X_SCALE', '1'))     # 장평
 BIG_SCALE = float(os.environ.get('BIG_SCALE', '1'))   # 높이 36 이상 조각 배율
 ITEM_FILL = {}
-WEIGHT = None                                # 굵기 강제(인터레이스 화면은 높이를 반으로 그려서 판정이 어긋남)
+WEIGHT = None
+# «표시 칸»으로 잘못 잡힌 큰 이름 괄호 」 세로 막대(4행 연속 외톨이 칸) — 되살리지 않고 지움.
+#   3스테이지 결과 「呑竜」: 이름을 옮겨 그려서 원래 막대가 위에 남음(2026-10-18 실기 «돈류»). 항목 분해(stg_items)는 그대로 둬 번호 유지.
+NOT_MARKER = {'C': {(37, 43), (38, 43), (39, 43), (40, 43)}, 'L': {(37, 40), (38, 40), (39, 40), (40, 40)}}
+# 원본 조각 자리 그대로 그리기 {(스테이지, 항목): [(지정 글, 높이, x0, y0, x1, y1) 그룹 좌표]} — '{h~}' = 둘째 채움(흰), '{h}' = 첫째 채움(붉은)
+#   6스테이지 중간 «高高度中継/滞空攻撃機「爆鐵」»: 흰 두 줄 x82~198(y10~31·33~54) + 붉은 이름 x202~326 y10~54 (2026-10-18 실기: 줄·이름 잘림)
+CUSTOM = {('L', 9): [('{18~}고고도 중계', 18, 82, 10, 199, 32), ('{18~}부공 공격기', 18, 82, 33, 199, 55), ('{40}「바쿠잔」', 40, 202, 10, 327, 55)],
+          # 6스테이지 격파·실패: 붉은 이름 x82~206 y2~45 · 흰 撃破(x210~254)/撃破失敗(x210~301) y26~46 — 따로 복사(2026-10-18 실기 «격파 잘림»)
+          ('L', 12): [('{40}「바쿠잔」', 40, 82, 2, 207, 46), ('{18~}격파', 18, 210, 26, 255, 47)],
+          ('L', 15): [('{40}「바쿠잔」', 40, 82, 2, 207, 46), ('{18~}공격 실패', 18, 210, 26, 302, 47)]}                                # 굵기 강제(인터레이스 화면은 높이를 반으로 그려서 판정이 어긋남)
 
 
 def font(size, weight):
@@ -137,6 +146,8 @@ def build(X):
             pass
         box[img[it['y0']:it['y1'], it['x0']:it['x1']] > 0] = 0
         for (r, x) in markers[g]:                          # 표시 칸은 되살림
+            if (r, x) in NOT_MARKER.get(it['stage'], ()) or x in (10, 25, 43, 48):   # 「」 세로 막대 오판 열(결과 화면 큰 이름 괄호) — 되살리지 않음
+                continue
             rr = (r - grp[g][0]) * 8
             new[rr:rr + 8, x * 8:x * 8 + 8] = img[rr:rr + 8, x * 8:x * 8 + 8]
     # 2) 그리기
@@ -145,6 +156,19 @@ def build(X):
         if v in ('=', ''):
             continue
         g = it['grp']; img, new, pal = canv[g]
+        if (X, j) in CUSTOM:                               # 원본 조각 자리 그대로(게임이 흰 줄·붉은 이름을 따로 복사)
+            for txt, h, bx0, by0, bx1, by1 in CUSTOM[(X, j)]:
+                m = render_line(line_mask(txt), h)
+                if m.shape[1] > bx1 - bx0:
+                    m = squeeze(m, bx1 - bx0)
+                if m.shape[0] > by1 - by0:
+                    m = squeeze(m, m.shape[1], by1 - by0)
+                xx = bx0 + (bx1 - bx0 - m.shape[1]) // 2; yy = by0 + (by1 - by0 - m.shape[0]) // 2
+                snap_, K_SNAP = globals()['SNAP'], None
+                globals()['SNAP'] = 0
+                place(new, pal, m, yy, xx, it['fill'], it['edge'], it['pal'], 0, it['alt'])
+                globals()['SNAP'] = snap_
+            continue
         # 오른쪽 한계: 이 항목 x1 과, 같은 줄 높이에 걸친 «지운» 항목들의 x1 중 큰 값 (+10%)
         if it['set'] == 'PRE' or os.environ.get('STRICT_ALL') == '1':
             right = (it['x1'] + 7) // 8 * 8            # 출격 전: 원래 글자 칸 끝까지만(게임이 그 칸 범위만 화면에 복사 — 넘치면 잘림)

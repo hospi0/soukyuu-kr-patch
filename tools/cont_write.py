@@ -13,10 +13,13 @@ for X in (sys.argv[1:] or list('BOCASL')):
     mbytes, tiles, comp, rep = C.rebuild(X)
     src = os.path.join(OUT, path)
     d = bytearray(open(src if os.path.exists(src) else os.path.join(C.DISC, path), 'rb').read())
-    orig_end = sglz.decode(bytes(d), go)[1]
+    orig_end = sglz.decode(open(os.path.join(C.DISC, path), 'rb').read(), go)[1]   # 디스크 원본 기준(out 은 이미 짧아졌을 수 있음)
     assert len(comp) <= orig_end - go, (X, len(comp), orig_end - go)
-    m = mbytes[:go - C.MAP0]                             # GF 시작 전까지만(2스테이지는 마지막 칸이 GF 와 겹침)
-    d[C.MAP0:go] = m
+    head = C.MAP_HEAD.get(X, go - 0x1680)                # 맵 = 머리 줄부터 GF 시작 전까지만(2스테이지는 마지막 칸이 GF 와 겹침)
+    orig = open(os.path.join(C.DISC, path), 'rb').read()
+    d[:head] = orig[:head]                               # ★머리 앞은 맵이 아님(물체 표·팔레트) — 예전 판이 덮어쓴 것 되돌림(2026-10-18 크래시)
+    d[head:go] = mbytes[head - C.MAP0:go - C.MAP0]
+    assert 0xFFFF not in struct.unpack('>%dH' % ((go - head) // 2), bytes(d[head:head + (go - head) // 2 * 2])) or X == 'O'
     d[go:go + len(comp)] = comp
     assert sglz.decode(bytes(d), go)[0] == tiles
     os.makedirs(os.path.dirname(os.path.join(OUT, path)), exist_ok=True)

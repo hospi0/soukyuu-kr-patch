@@ -69,8 +69,10 @@ def korean(ch, g):
 
 def main():
     prev = []
-    for X in 'BOCASL':
-        spec = S.SETS[X][1]['PRE']; fp, off = spec.rsplit(':', 1); off = int(off, 16)
+    targets = [(X,) + tuple(S.SETS[X][1]['PRE'].rsplit(':', 1)) for X in 'BOCASL']
+    targets.append(('END', 'ENDING/ENDING_S.BIN', '12A08'))     # 엔딩 날짜(2057年…) — 같은 글리프 자리(2026-10-18), T 는 end_copy.py
+    for X, fp, off in targets:
+        off = int(off, 16)
         src = os.path.join(OUT, fp)
         d = bytearray(open(src if os.path.exists(src) else os.path.join(S.DISC, fp), 'rb').read())
         orig_len = (lambda b: sglz.decode(b, off)[1] - off)(open(os.path.join(S.DISC, fp), 'rb').read())

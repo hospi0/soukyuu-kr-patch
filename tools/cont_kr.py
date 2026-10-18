@@ -72,6 +72,8 @@ def load(X):
     m = d[MAP0:go]
     ents = list(struct.unpack('>%dH' % (len(m) // 2), m[:len(m) // 2 * 2]))
     ents += [0xFFFF] * (-len(ents) % 64)            # GF 와 겹쳐 잘린 칸 = 안 쓰는 칸(화면 밖 63열)
+    # ★머리 줄(h) 위 2행은 맵이 아니다 — 스테이지 물체 표·팔레트(3스테이지 0x168~ 물체 표를 ec00 으로 덮어 도중 크래시, 2026-10-18)
+    ents[:h * 64] = [0xFFFF] * (h * 64)
     return d, go, end, tiles, ents
 
 

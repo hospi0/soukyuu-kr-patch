@@ -183,7 +183,14 @@ def render_page(f, k, tr):
     if two:
         allslots += [(cols[1], (a, b)) for a, b, x0, x1 in lines[cols[1]]]
     wmax = cols[0][1] - cols[0][0] - 4
-    blines = wrap(body, wmax)
+    if '¶' in body:                                    # ¶ = 여기서 쪽(단) 넘김 — 원본처럼 첫 쪽을 문장 끝에서 끝냄(2026-10-18)
+        first, rest = body.split('¶', 1)
+        b1 = wrap(first, wmax); n0 = len(slots)
+        if len(b1) > n0:
+            raise SystemExit('%s %s ¶ 앞이 첫 단(%d줄)보다 김: %d' % (f, k, n0, len(b1)))
+        blines = b1 + [''] * (n0 - len(b1)) + wrap(rest, wmax)
+    else:
+        blines = wrap(body, wmax)
     H = min(img.shape[0], int(allslots[-1][1][1]) + 10) if allslots else img.shape[0]   # 상자 안(원래 마지막 줄 +10)까지만
     while len(allslots) < len(blines):                  # 넘치면 마지막 단 아래로 같은 간격
         c, (a, b) = allslots[-1]
@@ -205,6 +212,8 @@ def render_page(f, k, tr):
         over = len(blines) - len(allslots)
     bodypal = collections.Counter(p["pal"][[int(s[1][0]) // 8 for s in allslots[:3]], 1:20].ravel()).most_common(1)[0][0] if allslots else 14
     for (c, (a, b)), t in zip(allslots, blines):
+        if not t:
+            continue
         m = text_layer(t)
         put(new, pal, m, c[0] + 2, a + (b - a - m.shape[0]) // 2, bodypal)
     return p, new, pal, dict(본문줄=len(blines), 자리=len(allslots), 넘침=max(0, over))
