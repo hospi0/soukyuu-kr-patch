@@ -10,10 +10,10 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
-VER = 'v0.91'
+VER = 'v0.92'
 XDELTA = r'C:\claude\utils\xdelta.exe'
 ROMNAME = 'Soukyuu Gurentai (Japan) (Rev A)'
-SRC = os.path.join(r'C:\claude\roms\ss', ROMNAME)
+SRC = os.path.join(r'D:\hospi\My Documents\한글패치\SS\ss', ROMNAME)   # 2026-10-28 롬 위치 이동
 BUILD = os.path.join(ROOT, 'work', 'build')
 NAME = 'SoukyuuGurentai_KR_' + VER
 TITLE = '창궁홍련대 (세가 새턴 일본판 Rev A) 한글 패치 ' + VER

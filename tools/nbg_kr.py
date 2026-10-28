@@ -35,6 +35,16 @@ SCREENS = {
     # 경고문 NBG0 (このゲームはフィクションです…) — OPDEMO_T BD 2000 @0x18B10 + 팔레트 32 B @0x1AB10 + GF @0x1AB30 → VRAM 0x78000 (PNCN 0xC02F)
     'warn0': dict(map=('OPDEMO/OPDEMO_T.BIN', 0x18B10, 64, 64), tiles=('OPDEMO/OPDEMO_T.BIN:1AB30', 0x78000), base=0x3000,
                   interlace=False, state='s2', palsup=1, post='post_warn', aa=True),
+    # 오프닝 첫 글 NBG0 (西暦2056年 / 企業集合都市 / 東京) — OPDEMO_T BD 2000 @0x216C4 + 팔레트 32 B @0x236C4 + GF @0x236E4 → VRAM 0x78000 (2026-10-28 스테이트 op28)
+    'op0': dict(map=('OPDEMO/OPDEMO_T.BIN', 0x216C4, 64, 64), tiles=('OPDEMO/OPDEMO_T.BIN:236E4', 0x78000), base=0x3000,
+                interlace=False, state='op28', palsup=1, post='post_op0', aa=True),
+    # 오프닝 기체 소개 NBG3 («蒼穹紅蓮隊»所属 / S.O.Q-004 屠竜 · 010 紫電 · 025 鵬牙) — OPDEMO_T BD 2000 + 팔레트 32 + GF → VRAM 0x78000 (2026-10-28 스테이트 mc1~3)
+    'mc1': dict(map=('OPDEMO/OPDEMO_T.BIN', 0x24D0C, 64, 64), tiles=('OPDEMO/OPDEMO_T.BIN:26D2C', 0x78000), base=0x3000,
+                interlace=False, state='mc1', palsup=6, post='post_mech', aa=True, mech=('토', '류', 0)),
+    'mc2': dict(map=('OPDEMO/OPDEMO_T.BIN', 0x2835C, 64, 64), tiles=('OPDEMO/OPDEMO_T.BIN:2A37C', 0x78000), base=0x3000,
+                interlace=False, state='mc2', palsup=6, post='post_mech', aa=True, mech=('시', '덴', 1)),
+    'mc3': dict(map=('OPDEMO/OPDEMO_T.BIN', 0x2B988, 64, 64), tiles=('OPDEMO/OPDEMO_T.BIN:2D9A8', 0x78000), base=0x3000,
+                interlace=False, state='mc3', palsup=6, post='post_mech', aa=True, mech=('호', '가', 0)),
     # 조작 설명(操作解説, 연습 스테이지 E) NBG3 — STGE_DAT 맵(칸 번호만, 64칸 폭) @0x32420 + GF @0x34CA0 → VRAM 0x60000
     'tut3': dict(map=('STG_E/STGE_DAT.BIN', 0x32420, 64, 81), tiles=('STG_E/STGE_DAT.BIN:34CA0', 0x60000), base=0x3000,
                  interlace=False, state='s18', palsup=6,
@@ -503,6 +513,59 @@ def post_warn(c, img, new, npal, crb):
         aa_put(new, npal, cov, Y0 + q * LH - 1, X0, 1, pv, c, crb, snap=False)
     K.WEIGHT = None
     print('  경고문 줄', lines)
+
+
+OP0_KR = [('서기', 25, 17, 30), ('년', 187, 17, 30), ('기업 집합 도시', 25, 49, 31), ('도쿄', 26, 82, 45)]   # (글, x, 윗줄 y, 잉크 높이) — 원본 자리·크기
+OP0_CLEAR = [(14, 49, 20, 89), (14, 49, 185, 250), (48, 130, 20, 250)]   # (y0, y1, x0, x1) — «205»·게임이 실행 중 넣는 «6»(맵 x20~22 y2~5, 타일 0x45~0x50) 칸은 원본 그대로
+
+
+def post_op0(c, img, new, npal, crb):
+    """오프닝 첫 글: 西暦→서기 · 年→년 · 企業集合都市→기업 집합 도시 · 東京→도쿄(노토 세리프 Black, 아래 눈금자 보존). 색 = 원본 글자에서 가장 많은 번호"""
+    reg = img[14:130, 20:250]
+    fill = int(collections.Counter(reg[reg > 0].tolist()).most_common(1)[0][0])
+    pv = int(npal[17 // 8, 25 // 8])
+    for y0, y1, x0, x1 in OP0_CLEAR:
+        new[y0:y1, x0:x1] = 0
+    K.WEIGHT = b'Black'
+    lim = {'서기': 62, '년': 40}
+    for t, x, y, h in OP0_KR:
+        cov = aa_cov(t, h, 1)
+        assert cov.shape[1] <= lim.get(t, 225), (t, cov.shape)
+        aa_put(new, npal, cov, y - 1, x, fill, pv, c, crb, snap=False)
+    K.WEIGHT = None
+    print('  오프닝 첫 글', [t for t, _, _, _ in OP0_KR], '색', fill)
+
+
+def post_mech(c, img, new, npal, crb):
+    """오프닝 기체 소개: 「蒼穹紅蓮隊」所属 → 「창궁홍련대」소속(y17~39) · 큰 이름 두 글자(x200~, y24~92) — 글자마다 원래 색(채도 높은 색 / 흰색).
+    번호 S.O.Q-0nn(y44~102, x<200)은 원본 화소 그대로."""
+    ch1, ch2, colored = c['mech']
+    pv = int(npal[30 // 8, 100 // 8])
+    def rgb(z):
+        e = crb[((c['palsup'] * 16 + pv) * 16 + int(z)) & 0x7FF]; return (e & 31) * 8, ((e >> 5) & 31) * 8, ((e >> 10) & 31) * 8
+    big = img[20:100, 198:350]
+    vals = collections.Counter(big[big > 0].ravel().tolist())
+    white = max(vals, key=lambda z: sum(rgb(z)))
+    color = max(vals, key=lambda z: max(rgb(z)) - min(rgb(z)))
+    sm = img[15:41, 8:200]
+    swhite = max(collections.Counter(sm[sm > 0].ravel().tolist()), key=lambda z: sum(rgb(z)))
+    new[15:41, 8:200] = 0
+    new[18:100, 199:350] = 0
+    K.WEIGHT = b'Black'
+    cov = aa_cov('「창궁홍련대」소속', 22, 1)                 # 부호 뒤 공백 없음(전프로젝트 규칙)
+    if cov.shape[1] > 190:
+        cov = aa_fit(cov, 190)
+    aa_put(new, npal, cov, 17, 10, swhite, pv, c, crb, snap=False)
+    x = 201
+    for q, t in enumerate((ch1, ch2)):
+        cv = aa_cov(t, 66, 1)
+        if cv.shape[1] > 68:
+            cv = aa_fit(cv, 68)
+        aa_put(new, npal, cv, 25, x, color if q == colored else white, pv, c, crb, snap=False)
+        x += cv.shape[1] + 5
+    assert x - 5 <= 348, ('큰 이름 폭', x)
+    K.WEIGHT = None
+    print('  기체 소개', ch1 + ch2, '색', color, white, swhite)
 
 
 def build(name):

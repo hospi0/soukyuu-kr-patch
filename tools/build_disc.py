@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 r"""창궁홍련대 시험 빌드 — work/out/ 의 바뀐 파일을 트랙 01(MODE1/2352)에 넣는다 (2026-10-17)
   파일 기록·EDC/ECC = 블루 시드 tools/iso.py patch()(제자리, 넘치면 끝으로 — 이 프로젝트 출력은 모두 원래 크기).
-  원본: C:\claude\roms\ss\Soukyuu Gurentai (Japan) (Rev A)\ → work/build/ (트랙 01 새로 + 오디오 트랙 복사 + cue)
+  원본: D:\hospi\My Documents\한글패치\SS\ss\Soukyuu Gurentai (Japan) (Rev A)\ → work/build/ (트랙 01 새로 + 오디오 트랙 복사 + cue)
   python tools/build_disc.py
 """
 import glob
@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 sys.path.insert(0, r'C:\claude\project\blueseed-kr-patch\tools')
 import iso  # noqa: E402
 
-SRC = r'C:\claude\roms\ss\Soukyuu Gurentai (Japan) (Rev A)'
+SRC = r'D:\hospi\My Documents\한글패치\SS\ss\Soukyuu Gurentai (Japan) (Rev A)'
 NAME = 'Soukyuu Gurentai (Japan) (Rev A)'
 OUT = os.path.join(ROOT, 'work', 'out'); DISC = os.path.join(ROOT, 'work', 'disc')
 BUILD = os.path.join(ROOT, 'work', 'build')

@@ -5,7 +5,7 @@ r"""창궁홍련대 디스크(트랙 1 MODE1/2352, 2~52 = 오디오) 읽기 — 
 """
 import os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
-ROM = r'C:\claude\roms\ss\Soukyuu Gurentai (Japan) (Rev A)\Soukyuu Gurentai (Japan) (Rev A) (Track 01).bin'   # md5 d1487a99…
+ROM = r'D:\hospi\My Documents\한글패치\SS\ss\Soukyuu Gurentai (Japan) (Rev A)\Soukyuu Gurentai (Japan) (Rev A) (Track 01).bin'   # md5 d1487a99…
 SKIP = ()
 
 
